@@ -2,10 +2,10 @@ const Product = require('../models/product')
 const Cart = require('../models/cart')
 
 exports.getProducts = (req, res, next) => {
-    Product.fetchAll()
-        .then(([rows, fieldData]) => {
+    Product.findAll()
+        .then(products => {
             res.render('shop/product-list', {
-                prods: rows,
+                prods: products,
                 pageTitle: 'All Products',
                 path: '/products'
             })
@@ -15,12 +15,13 @@ exports.getProducts = (req, res, next) => {
 
 exports.getProduct = (req, res, next) => {
     const prodId = req.params.productId
-
-    Product.findById(prodId)
-        .then(([product]) => {
+    // Product.findAll({ where: { id: prodId } }).then().catch() //this will also work and will return an array
+    
+    Product.findByPk(prodId)
+        .then(product => {
             res.render('shop/product-detail', {
-                product: product[0], //because we get an array of 1 element and we need to pass a single object
-                pageTitle: 'Product', //can show title as well
+                product: product,
+                pageTitle: 'Product',
                 path: '/products'
             })
         })
@@ -28,11 +29,10 @@ exports.getProduct = (req, res, next) => {
 }
 
 exports.getIndex = (req, res, next) => {
-    //we get array with two elements here, first being our data and second is the meta data lets say. So destructure them
-    Product.fetchAll()
-        .then(([rows, fieldData]) => {
+    Product.findAll()
+        .then(products => {
             res.render('shop/index', {
-                prods: rows,
+                prods: products,
                 pageTitle: 'Shop',
                 path: '/'
             })

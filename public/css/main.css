@@ -23,6 +23,14 @@ form {
   text-align: center;
 }
 
+.image {
+  height: 15rem;
+}
+
+.image img {
+  height: 20rem;
+}
+
 .mt-2 {
   margin-top: 2rem;
 }
