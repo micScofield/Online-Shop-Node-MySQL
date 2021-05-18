@@ -1,65 +1,37 @@
-const fs = require('fs')
-const path = require('path')
-
+const db = require('../util/db')
 const Cart = require('./cart')
 
-const p = path.join(
-  path.dirname(require.main.filename),
-  'data',
-  'products.json'
-)
-
-const getProductsFromFile = cb => {
-  fs.readFile(p, (err, fileContent) => err ? cb([]) : cb(JSON.parse(fileContent)))
-}
+// To prevent SQL Injection in input fields use the ? approach for fields as users can inject sql queries inside fields. Thats a layer of security for us lets say.
 
 module.exports = class Product {
-  constructor(id, title, imageUrl, description, price) {
-    this.id = id
-    this.title = title
-    this.imageUrl = imageUrl
-    this.description = description
-    this.price = price
-  }
+	constructor(id, title, imageUrl, description, price) {
+		this.id = id
+		this.title = title
+		this.imageUrl = imageUrl
+		this.description = description
+		this.price = price
+	}
 
-  save() {
-    getProductsFromFile(products => {
-      //check if product is present, in such case edit that product and prepopulate
-      if (this.id) {
-        const existingProductIndex = products.findIndex(prod => prod.id === this.id)
-        const updatedProducts = [...products]
-        updatedProducts[existingProductIndex] = this
+	save() {
+		const query = 'INSERT INTO products (title, price, imageUrl, description) VALUES (?, ?, ?, ?)'
+		return db.execute(query, [this.title, this.price, this.imageUrl, this.description])
+	}
 
-        fs.writeFile(p, JSON.stringify(updatedProducts), err => console.log(err))
-      } else {
-        this.id = Math.random().toString() //use uuid
-        products.push(this)
-        fs.writeFile(p, JSON.stringify(products), err => console.log(err))
-      }
-    })
-  }
+	static deleteById(id) {
 
-  static deleteById(id) {
-    getProductsFromFile(products => {
-      const product = products.find(prod => prod.id === id)
-      const updatedProducts = products.filter(prod => prod.id !== id)
-      fs.writeFile(p, JSON.stringify(updatedProducts), err => {
-        if (!err) {
-          //delete product from everybody's cart as well
-          Cart.deleteProduct(id, product.price)
-        }
-      })
-    })
-  }
+	}
 
-  static fetchAll(cb) {
-    getProductsFromFile(cb)
-  }
+	static fetchAll() {
+		const query = 'SELECT * FROM products'
+		return db.execute(query)
+	}
 
-  static findById(id, cb) {
-    getProductsFromFile(products => {
-      const product = products.find(p => p.id === id)
-      cb(product)
-    })
-  }
+	static findById(id) {
+		console.log('id', id)
+		// const query = `SELECT * FROM products WHERE products.id = ${id}`
+		// return db.execute(query)
+
+		const query = `SELECT * FROM products WHERE id = ?`
+		return db.execute(query, [id])
+	}
 }
