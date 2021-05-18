@@ -1,4 +1,4 @@
-const Sequelize = require('sequelize') //gives us a constructor lets say
+const Sequelize = require('sequelize').Sequelize //gives us a constructor lets say
 
 //below sets us a connection pool. Dialect is saying we are using mysql db and host is localhost. Also first three params are db name, username and password
 
