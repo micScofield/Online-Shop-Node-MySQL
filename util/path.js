@@ -4,3 +4,4 @@ module.exports = path.dirname(require.main.filename)
 
 //test commit
 //feature2
+//feature3
