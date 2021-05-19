@@ -1,5 +1,7 @@
 const Product = require('../models/product')
 
+//Because of the association, sequelize adds special helper methods which we are using by req.user.
+
 exports.getAddProduct = (req, res, next) => {
     res.render('admin/edit-product', {
         pageTitle: 'Add Product',
@@ -14,14 +16,23 @@ exports.postAddProduct = (req, res, next) => {
     const price = req.body.price
     const description = req.body.description
 
-    Product.create({
+    req.user.createProduct({
         title,
         imageUrl,
         price,
         description
     })
-        .then(() => res.redirect('admin/products'))
+        .then(() => res.redirect('/admin/products'))
         .catch(err => console.error(err))
+
+    // Product.create({
+    //     title,
+    //     imageUrl,
+    //     price,
+    //     description
+    // })
+    //     .then(() => res.redirect('/admin/products'))
+    //     .catch(err => console.error(err))
 }
 
 exports.getEditProduct = (req, res, next) => {
@@ -30,19 +41,32 @@ exports.getEditProduct = (req, res, next) => {
         return res.redirect('/')
     }
     const prodId = req.params.productId
-    Product.findByPk(prodId)
+    req.user.getProducts({ where: { id: prodId } })
         .then(product => {
-            if (!product) {
+            if (!product[0]) {
                 return res.redirect('/')
             }
             res.render('admin/edit-product', {
                 pageTitle: 'Edit Product',
                 path: '/admin/edit-product',
                 editing: editMode,
-                product: product
+                product: product[0]
             })
         })
         .catch(err => console.error(err))
+    // Product.findByPk(prodId)
+    //     .then(product => {
+    //         if (!product) {
+    //             return res.redirect('/')
+    //         }
+    //         res.render('admin/edit-product', {
+    //             pageTitle: 'Edit Product',
+    //             path: '/admin/edit-product',
+    //             editing: editMode,
+    //             product: product
+    //         })
+    //     })
+    //     .catch(err => console.error(err))
 }
 
 exports.postEditProduct = (req, res, next) => {
@@ -51,7 +75,7 @@ exports.postEditProduct = (req, res, next) => {
     const updatedPrice = req.body.price
     const updatedImageUrl = req.body.imageUrl
     const updatedDesc = req.body.description
-
+    //no need to use req.user here because we are here only because we are past the edit router where the user is already and we know that product will be there 
     Product.update({
         title: updatedTitle,
         price: updatedPrice,
@@ -64,7 +88,7 @@ exports.postEditProduct = (req, res, next) => {
 }
 
 exports.getProducts = (req, res, next) => {
-    Product.findAll()
+    req.user.getProducts()
         .then(products => {
             res.render('admin/products', {
                 prods: products,
@@ -73,10 +97,21 @@ exports.getProducts = (req, res, next) => {
             })
         })
         .catch(err => console.error(err))
+
+    // Product.findAll()
+    //     .then(products => {
+    //         res.render('admin/products', {
+    //             prods: products,
+    //             pageTitle: 'Admin Products',
+    //             path: '/admin/products'
+    //         })
+    //     })
+    //     .catch(err => console.error(err))
 }
 
 exports.postDeleteProduct = (req, res, next) => {
     const prodId = req.body.productId
+    // can also use req.user but this is fine as well
     Product.destroy({ where: { id: prodId } })
         .then(() => res.redirect('/admin/products'))
         .catch(err => console.error(err))

@@ -9,6 +9,8 @@ const Product = require('./models/product')
 const User = require('./models/user')
 const Cart = require('./models/cart')
 const CartItem = require('./models/cart-item')
+const Order = require('./models/order')
+const OrderItem = require('./models/order-item')
 
 const app = express()
 
@@ -20,6 +22,15 @@ app.use(bodyParser.urlencoded({ extended: false }))
 app.use(express.static(path.join(__dirname, 'public')))
 
 //Setup a middleware to set user on the request parameter so that we know user details
+app.use((req, res, next) => {
+    User.findByPk(1)
+        .then(user => {
+            req.user = user //user is a sequelized object with helper methods as well btw incase required
+            // console.log(req.user)
+            next()
+        })
+        .catch(err => console.log(err))
+})
 
 app.use('/admin', require('./routes/admin'))
 app.use(require('./routes/shop'))
@@ -36,15 +47,38 @@ User.hasMany(Product)
 User.hasOne(Cart)
 Cart.belongsTo(User) //this is optional
 
-//many products can be in cart
+//many products can be in cart ie. many to many. We need a in between table to connect these two. For eg below CartItem is the place where the connection will be stored
 Cart.belongsToMany(Product, { through: CartItem })
 Product.belongsToMany(Cart, { through: CartItem })
+
+//One to one
+Order.belongsTo(User)
+//One to Many
+User.hasMany(Order)
+//One to Many
+Order.belongsToMany(Product, { through: OrderItem })
 
 //ensure all models are converted to tables if not exist
 //sync tables to appropriate models we defined using sequelize.define
 const PORT = process.env.PORT || 5000
 sequelize.sync()
-    .then(res => app.listen(PORT, () => console.log(`Server started on ${PORT}`)))
+    .then(res => {
+        //creating a dummy user
+        return User.findByPk(1)
+    })
+    .then(user => {
+        if (!user) {
+            return User.create({ name: 'Sanyam', email: 'a@a.com' })
+        }
+        return Promise.resolve(user) //because next then also expects a promise resolved, return user will also work because its understood by JS that all the time a promise will be resolved no matter what
+    })
+    .then(user => {
+        // Create a dummy cart for development 
+        return user.createCart()
+    })
+    .then((cart) => {
+        app.listen(PORT, () => console.log(`Server started on ${PORT}`))
+    })
     .catch(err => console.log(err))
 
 //if you want to reflect new changes to models / table schema while in development mode ofcourse, use { force: true } option in sync()
