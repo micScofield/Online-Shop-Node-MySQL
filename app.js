@@ -26,7 +26,7 @@ app.use((req, res, next) => {
     User.findByPk(1)
         .then(user => {
             req.user = user //user is a sequelized object with helper methods as well btw incase required
-            console.log(req.user)
+            // console.log(req.user)
             next()
         })
         .catch(err => console.log(err))
@@ -47,7 +47,7 @@ User.hasMany(Product)
 User.hasOne(Cart)
 Cart.belongsTo(User) //this is optional
 
-//many products can be in cart
+//many products can be in cart ie. many to many. We need a in between table to connect these two. For eg below CartItem is the place where the connection will be stored
 Cart.belongsToMany(Product, { through: CartItem })
 Product.belongsToMany(Cart, { through: CartItem })
 
@@ -73,7 +73,10 @@ sequelize.sync()
         return Promise.resolve(user) //because next then also expects a promise resolved, return user will also work because its understood by JS that all the time a promise will be resolved no matter what
     })
     .then(user => {
-        // console.log(user)
+        // Create a dummy cart for development 
+        return user.createCart()
+    })
+    .then((cart) => {
         app.listen(PORT, () => console.log(`Server started on ${PORT}`))
     })
     .catch(err => console.log(err))
