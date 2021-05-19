@@ -55,8 +55,9 @@ Product.belongsToMany(Cart, { through: CartItem })
 Order.belongsTo(User)
 //One to Many
 User.hasMany(Order)
-//One to Many
+//many to Many
 Order.belongsToMany(Product, { through: OrderItem })
+Product.belongsToMany(Order, { through: OrderItem }) //optional
 
 //ensure all models are converted to tables if not exist
 //sync tables to appropriate models we defined using sequelize.define

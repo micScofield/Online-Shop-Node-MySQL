@@ -1,5 +1,4 @@
 const Product = require('../models/product')
-const Cart = require('../models/cart')
 
 exports.getProducts = (req, res, next) => {
     Product.findAll()
@@ -150,16 +149,59 @@ exports.postCartDeleteProduct = (req, res, next) => {
     // })
 }
 
-exports.getOrders = (req, res, next) => {
-    res.render('shop/orders', {
-        path: '/orders',
-        pageTitle: 'Your Orders'
-    })
+exports.postOrder = (req, res, next) => {
+    //take all cart itemsmove in orders
+    /* 
+        Steps1. Fetch all cart items
+        2. Move items in orders
+        3. set order quantity using quantity value from cartItem
+        4. Reset Cart and redirect
+    */
+    let fetchedCart
+    req.user.getCart()
+        .then(cart => {
+            fetchedCart = cart
+            return cart.getProducts()
+        })
+        .then(products => {
+            //move them to Order table using the user itself as user is associated to order. One to Many, so we can use create Order just like we used createCart
+
+            return req.user.createOrder()
+                .then(order => {
+                    //we cant use through because quantity is different for all products so we need to set quantity for each product using map
+                    return order.addProducts(products.map(product => {
+                        //get quantity from cart and store in order item
+                        product.orderItem = { quantity: product.cartItem.quantity }
+                        return product
+                    }))
+                })
+                .catch(err => console.log(err))
+        })
+        .then(() => {
+            return fetchedCart.setProducts(null)
+        })
+        .then(() => {
+            res.redirect('/orders')
+        })
+        .catch(err => console.log(err))
 }
 
-exports.getCheckout = (req, res, next) => {
-    res.render('shop/checkout', {
-        path: '/checkout',
-        pageTitle: 'Checkout'
-    })
+exports.getOrders = (req, res, next) => {
+    req.user.getOrders({ include: ['products'] })  //instruct sequelize to fetch products as well along with individual order
+        .then(orders => {
+            console.log(orders)
+            res.render('shop/orders', {
+                path: '/orders',
+                pageTitle: 'Your Orders',
+                orders: orders
+            })
+        })
+        .catch(err => console.log(err))
 }
+
+// exports.getCheckout = (req, res, next) => {
+//     res.render('shop/checkout', {
+//         path: '/checkout',
+//         pageTitle: 'Checkout'
+//     })
+// }
