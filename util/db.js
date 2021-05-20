@@ -1,8 +1,11 @@
 const Sequelize = require('sequelize').Sequelize //gives us a constructor lets say
+const session = require('express-session')
 
 //below sets us a connection pool. Dialect is saying we are using mysql db and host is localhost. Also first three params are db name, username and password
 
-const sequelize = new Sequelize('node-online-shop', 'root', 'root', { dialect: 'mysql', host: 'localhost' })
+const sequelize = new Sequelize('node-online-shop', 'root', 'root',
+        { dialect: 'mysql', host: 'localhost', storage: './session.mysql' }
+    )
 
 module.exports = sequelize
 

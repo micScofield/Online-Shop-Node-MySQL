@@ -3,6 +3,7 @@ const path = require('path')
 const express = require('express')
 const bodyParser = require('body-parser')
 const session = require('express-session')
+const SequelizeStore = require("connect-session-sequelize")(session.Store);
 
 const errorController = require('./controllers/error')
 const sequelize = require('./util/db')
@@ -23,7 +24,14 @@ app.use(bodyParser.urlencoded({ extended: false }))
 app.use(express.static(path.join(__dirname, 'public')))
 
 //Setup session middleware
-app.use(session({ secret: 'My Secret Key', resave: false, saveUninitialized: false }))
+app.use(session({ 
+    secret: 'My Secret Key', 
+    resave: false, 
+    saveUninitialized: false,
+    store: new SequelizeStore({
+        db: sequelize
+    })
+}))
 //using resave:false, session will thus change only if something is changed in session and not for every request.
 //saveuninitialized will tell dont save session for each request unless its required
 //maxAge is also available and so does expires, see docs for ref
