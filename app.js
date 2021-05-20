@@ -2,6 +2,7 @@ const path = require('path')
 
 const express = require('express')
 const bodyParser = require('body-parser')
+const session = require('express-session')
 
 const errorController = require('./controllers/error')
 const sequelize = require('./util/db')
@@ -21,6 +22,12 @@ app.use(bodyParser.urlencoded({ extended: false }))
 
 app.use(express.static(path.join(__dirname, 'public')))
 
+//Setup session middleware
+app.use(session({ secret: 'My Secret Key', resave: false, saveUninitialized: false }))
+//using resave:false, session will thus change only if something is changed in session and not for every request.
+//saveuninitialized will tell dont save session for each request unless its required
+//maxAge is also available and so does expires, see docs for ref
+
 //Setup a middleware to set user on the request parameter so that we know user details
 app.use((req, res, next) => {
     User.findByPk(1)
@@ -34,6 +41,7 @@ app.use((req, res, next) => {
 
 app.use('/admin', require('./routes/admin'))
 app.use(require('./routes/shop'))
+app.use(require('./routes/auth'))
 app.use(errorController.get404)
 
 //Set up associations
@@ -73,11 +81,11 @@ sequelize.sync()
         }
         return Promise.resolve(user) //because next then also expects a promise resolved, return user will also work because its understood by JS that all the time a promise will be resolved no matter what
     })
-    .then(user => {
-        // Create a dummy cart for development 
-        return user.createCart()
-    })
-    .then((cart) => {
+    // .then(user => {
+    //     // Create a dummy cart for development 
+    //     return user.createCart()
+    // })
+    .then(() => {
         app.listen(PORT, () => console.log(`Server started on ${PORT}`))
     })
     .catch(err => console.log(err))
