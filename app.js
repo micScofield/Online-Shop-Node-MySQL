@@ -38,7 +38,7 @@ app.use(session({
 
 //Setup a middleware to set user on the request parameter so that we know user details
 app.use((req, res, next) => {
-    User.findByPk(1)
+    User.findOne({ where: { email: 'a@a.com' } })
         .then(user => {
             req.user = user //user is a sequelized object with helper methods as well btw incase required
             // console.log(req.user)
@@ -81,11 +81,11 @@ const PORT = process.env.PORT || 5000
 sequelize.sync()
     .then(res => {
         //creating a dummy user
-        return User.findByPk(1)
+        return User.findOne({ where: { email: 'a@a.com' } })
     })
     .then(user => {
         if (!user) {
-            return User.create({ name: 'Sanyam', email: 'a@a.com' })
+            return User.create({ name: 'Sanyam', email: 'a@a.com', password: 'a@a.com' })
         }
         return Promise.resolve(user) //because next then also expects a promise resolved, return user will also work because its understood by JS that all the time a promise will be resolved no matter what
     })

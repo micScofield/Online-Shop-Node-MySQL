@@ -1,3 +1,5 @@
+const User = require('../models/user')
+
 exports.getLogin = (req, res, next) => {
     console.log(req.session)
     console.log(req.session.isLoggedIn)
@@ -21,7 +23,19 @@ exports.postLogin = (req, res, next) => {
     req.session.save(() => res.redirect('/'))
 }
 
-exports.postSignup = (req, res, next) => {
+exports.postSignup = async (req, res, next) => {
+    const { name, email, password, confirmPassword } = req.body
+
+    //check if already exists
+    const test = await User.findOne({ where: { email: email } })
+
+    if (test) {
+        console.log('Email exists !')
+        return false
+    }
+
+    await User.create({ name, email, password })
+
     req.session.isLoggedIn = true
     req.session.save(() => res.redirect('/'))
 }
